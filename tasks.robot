@@ -10,6 +10,7 @@ Library    RPA.Excel.Files
 Library    RPA.Tables
 Library    RPA.Desktop
 Library    RPA.PDF
+Library         RPA.RobotLogListener
 
 
 *** Tasks ***
@@ -23,7 +24,7 @@ Order robots from RobotSpareBin Industries Inc
         Preview the robot
         Submit the order
         ${pdf}=    Store the receipt as a PDF file    ${row}[Order number]
-        #${screenshot}=    Take a screenshot of the robot    ${row}[Order number]
+        ${screenshot}=    Take a screenshot of the robot    ${row}[Order number]
     #    Embed the robot screenshot to the receipt PDF file    ${screenshot}    ${pdf}
     #    Go to order another robot
     END
@@ -71,16 +72,27 @@ fill the form
 Preview the robot
     Click button    id:preview
     Wait Until Element Is Visible    id:preview
+    Wait Until Element Is Enabled    id:preview
 Submit the order
+    
+    Mute Run On Failure            id:receipt
+    
     click button    id:order
+    Wait Until Element Is Visible    id:receipt
     Page Should Contain Element    id:receipt
 
 
 
 Store the receipt as a PDF file
-    Wait Until Element Is Visible    id:robot-preview-image
-    ${receipt_html}=    Get Element Attribute    id:robot-preview-image    outerHTML
-    Html To Pdf    ${receipt_html}    ${OUTPUT_DIR}${/}{Order number}.pdf
+    [Arguments]    ${order_number}  
+    Wait Until Element Is Visible    id:receipt
+    ${receipt_html}=    Get Element Attribute    id:receipt    outerHTML
+    Set Local Variable    ${pdf name}    ${OUTPUT_DIR}${/}${order_number}.pdf
+    Html To Pdf    cotent=${receipt_html}    output_path=${pdf name}    
 
 
-#Take a screenshot of the robot
+Take a screenshot of the robot
+    [Arguments]    ${screenshot}
+    wait until element is visible    id:robot-preview-image
+    Set Local Variable    ${image_preview}   ${OUTPUT_DIR}${/}${screenshot}.png 
+    Screenshot    id:robot-preview-image    ${image_preview}
